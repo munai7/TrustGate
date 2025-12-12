@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>رمز المطابقة – تيقّن</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f6f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .card {
+      background: #fff;
+      padding: 24px 20px;
+      border-radius: 18px;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.06);
+      width: 100%;
+      max-width: 360px;
+      text-align: center;
+    }
+    h1 {
+      margin: 0 0 12px;
+      font-size: 20px;
+    }
+    .code-box {
+      margin: 16px auto;
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: 4px;
+      padding: 10px 0;
+      border-radius: 12px;
+      background: #e5f3ec;
+      color: #007b4b;
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .status {
+      font-size: 14px;
+      color: #666;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>رمز المطابقة</h1>
+    <div id="codeBox" class="code-box">--</div>
+    <div id="status" class="status">جارِ جلب الرمز...</div>
+  </div>
+
+  <script>
+    async function loadCode() {
+      const params = new URLSearchParams(window.location.search);
+      const attemptId = params.get('attemptId');
+
+      const codeBox = document.getElementById('codeBox');
+      const status = document.getElementById('status');
+
+      if (!attemptId) {
+        codeBox.textContent = '--';
+        status.textContent = 'لا يوجد كود حاليًا (لا يوجد attemptId في الرابط).';
+        return;
+      }
+
+      try {
+        const res = await fetch('http://127.0.0.1:5000/attempts/' + encodeURIComponent(attemptId));
+        if (!res.ok) {
+          codeBox.textContent = '--';
+          status.textContent = 'لا يوجد كود لهذه المحاولة أو انتهت مدة صلاحيتها.';
+          return;
+        }
+
+        const data = await res.json();
+        if (data.matchingCode) {
+          codeBox.textContent = data.matchingCode;
+          status.textContent = 'أدخلي هذا الرمز في تطبيق تيقّن.';
+        } else {
+          codeBox.textContent = '--';
+          status.textContent = 'لم يتم العثور على matchingCode في هذه المحاولة.';
+        }
+      } catch (err) {
+        console.error(err);
+        codeBox.textContent = '--';
+        status.textContent = 'تعذّر الاتصال بخادم تيقّن.';
+      }
+    }
+
+    loadCode();
+  </script>
+</body>
+</html>

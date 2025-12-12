@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>تسجيل الدخول – نموذج أبشر تجريبي</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --green-main: #007b4b;
+      --green-soft: #e5f3ec;
+      --text-main: #222222;
+      --text-muted: #757575;
+      --border-color: #d7d7d7;
+      --bg-page: #f5f6f8;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg-page);
+      display: flex;
+      justify-content: center;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 430px;
+      min-height: 100vh;
+      background: #ffffff;
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.03);
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid #eeeeee;
+    }
+
+    .top-icons {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      color: var(--green-main);
+      font-size: 20px;
+    }
+
+    .icon-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1px solid var(--green-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .logo-text {
+      font-weight: 700;
+      color: var(--green-main);
+      font-size: 18px;
+      letter-spacing: 1px;
+    }
+
+    .content {
+      padding: 24px 16px 40px;
+      background: var(--bg-page);
+      min-height: calc(100vh - 56px);
+    }
+
+    .login-card {
+      background: #ffffff;
+      border-radius: 18px;
+      padding: 24px 18px 30px;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.04);
+    }
+
+    .login-title {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 18px;
+      text-align: right;
+      color: var(--text-main);
+    }
+
+    .field-group {
+      margin-bottom: 16px;
+    }
+
+    .field-label {
+      font-size: 14px;
+      color: var(--text-main);
+      margin-bottom: 8px;
+    }
+
+    .field-wrapper {
+      display: flex;
+      align-items: center;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      background: #ffffff;
+      padding-inline: 12px;
+    }
+
+    .field-wrapper input {
+      border: none;
+      outline: none;
+      background: transparent;
+      padding: 10px 6px;
+      flex: 1;
+      font-size: 14px;
+      color: var(--text-main);
+    }
+
+    .field-wrapper input::placeholder {
+      color: #b4b4b4;
+    }
+
+    .field-icon {
+      font-size: 18px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-inline-start: 6px;
+    }
+
+    .forgot {
+      text-align: right;
+      margin-top: 4px;
+      margin-bottom: 12px;
+    }
+
+    .forgot a {
+      font-size: 13px;
+      color: var(--green-main);
+      text-decoration: none;
+    }
+
+    .forgot a:hover {
+      text-decoration: underline;
+    }
+
+    .btn-main {
+      width: 100%;
+      border: none;
+      border-radius: 999px;
+      background: var(--green-main);
+      color: #ffffff;
+      padding: 12px 0;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    .btn-main:active {
+      opacity: 0.9;
+    }
+
+    .new-user {
+      margin-top: 16px;
+      text-align: center;
+      font-size: 14px;
+      color: var(--green-main);
+      font-weight: 600;
+    }
+
+    .note {
+      margin-top: 20px;
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.7;
+      text-align: center;
+    }
+
+    @media (max-width: 480px) {
+      .page {
+        box-shadow: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="top-bar">
+      <div class="top-icons">
+        <div class="icon-circle">&#9776;</div>
+        <div class="icon-circle">&#127760;</div> 
+        <div class="icon-circle">&#128269;</div> 
+      </div>
+      <div class="logo-text">أبشر</div> 
+    </header>
+
+    <main class="content">
+      <section class="login-card">
+        <h1 class="login-title">تسجيل الدخول</h1>
+
+        <form id="absherMockForm">
+          <div class="field-group">
+            <div class="field-label">اسم المستخدم أو رقم الهوية</div>
+            <div class="field-wrapper">
+              <input
+                type="text"
+                id="username"
+                placeholder="اسم المستخدم أو رقم الهوية"
+                autocomplete="username"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="field-group">
+            <div class="field-label">كلمة المرور</div>
+            <div class="field-wrapper">
+              <input
+                type="password"
+                id="password"
+                placeholder="كلمة المرور"
+                autocomplete="current-password"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="forgot">
+            <a href="#">نسيت كلمة المرور؟</a>
+          </div>
+
+          <button type="submit" class="btn-main">تسجيل الدخول</button>
+
+          <div class="new-user">مستخدم جديد؟</div>
+        </form>
+
+        <p class="note">
+          هذه صفحة تجريبية لمحاكاة واجهة تسجيل الدخول في أبشر.
+        </p>
+      </section>
+    </main>
+  </div>
+
+<script>
+  const form = document.getElementById('absherMockForm');
+
+  const ksaCities = [
+    'الرياض، السعودية',
+    'جدة، السعودية',
+    'الدمام، السعودية',
+    'المدينة المنورة، السعودية'
+  ];
+
+  const worldCities = [
+    'براغ، التشيك',
+    'لندن، المملكة المتحدة',
+    'طوكيو، اليابان',
+    'برلين، ألمانيا',
+    'باريس، فرنسا'
+  ];
+
+  const devices = [
+    'Chrome على Windows 10',
+    'Safari على iPhone',
+    'Chrome على Android',
+    'Edge على Windows 11'
+  ];
+
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const username = document.getElementById('username').value.trim();
+    const now = Date.now();
+
+    if (!username) {
+      alert('فضلاً أدخلي اسم المستخدم أو رقم الهوية.');
+      return;
+    }
+
+    let lastLogin = null;
+    try {
+      lastLogin = JSON.parse(localStorage.getItem('absher_last_login'));
+    } catch (_) {
+      lastLogin = null;
+    }
+
+    let suspicious = false;
+    let riskReason = '';
+    let riskDetails = '';
+    let previousLocation = null;
+    let currentLocation = null;
+    let deviceInfo = '';
+
+    const baseCityIndex = Math.floor(Math.random() * ksaCities.length);
+    const foreignCityIndex = Math.floor(Math.random() * worldCities.length);
+    const deviceIndex = Math.floor(Math.random() * devices.length);
+
+    if (lastLogin && lastLogin.userId === username) {
+      const diffMinutes = (now - lastLogin.timestamp) / 60000;
+
+      if (diffMinutes < 120) {
+        suspicious = true;
+        riskReason = 'Impossible_Travel';
+        previousLocation = lastLogin.location || ksaCities[baseCityIndex];
+        currentLocation = worldCities[foreignCityIndex];
+        deviceInfo = devices[deviceIndex];
+
+        riskDetails =
+          'تم رصد تسجيل دخولين لنفس الحساب من موقعين مختلفين خلال ' +
+          diffMinutes.toFixed(1) +
+          ' دقيقة.\n' +
+          'الموقع السابق: ' + previousLocation + '\n' +
+          'الموقع الحالي (تقريبي): ' + currentLocation;
+      }
+    }
+
+    const newLogin = {
+      userId: username,
+      location: previousLocation || ksaCities[baseCityIndex],
+      device: devices[deviceIndex],
+      timestamp: now
+    };
+    localStorage.setItem('absher_last_login', JSON.stringify(newLogin));
+
+    if (!suspicious) {
+      alert('تسجيل دخول عادي (بدون اشتباه). جرّبي مرة ثانية خلال وقت قصير ');
+      return;
+    }
+
+    const matchingCode = (Math.floor(Math.random() * 90) + 10).toString();
+
+    const payload = {
+      attemptId: 'WEB-' + now,
+      userId: username,
+      serviceName: 'Absher Login',
+      status: 'Suspicious',
+      riskLevel: 'High',
+      riskReason: riskReason,
+      riskDetails: riskDetails,
+      previousLocation: previousLocation,
+      currentLocation: currentLocation,
+      ipAddress: '127.0.0.1',
+      deviceInfo: deviceInfo,
+      createdAt: new Date(now).toISOString(),
+      matchingCode: matchingCode
+    };
+
+    try {
+      const res = await fetch('http://127.0.0.1:5500/attempts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      if (data.status === 'ok') {
+        alert('✅ تم إرسال محاولة مشبوهة إلى خادم تيقّن');
+
+        const url = 'code.html?attemptId=' + encodeURIComponent(payload.attemptId);
+        window.location.href = url;
+      } else {
+        alert('حدث خطأ أثناء حفظ المحاولة في الـ API.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('تعذّر الاتصال بخادم تيقّن على http://127.0.0.1:5000');
+    }
+  });
+</script>
+</body>
+</html>
