@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>Push Event – SOC Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Leaflet للـ Map -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <style>
+    :root {
+      --bg-body: #0b1120;
+      --bg-card: #020617;
+      --bg-card-soft: #0f172a;
+      --border-soft: #1f2937;
+      --text-main: #f9fafb;
+      --text-muted: #9ca3af;
+      --accent: #22c55e;
+      --accent-soft: rgba(34, 197, 94, 0.08);
+      --critical: #ef4444;
+      --high: #f97316;
+      --medium: #eab308;
+      --low: #3b82f6;
+      --normal: #22c55e;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top, #111827, #020617 55%);
+      color: var(--text-main);
+    }
+
+    .page {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 20px 16px 32px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .title-block {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .title-main {
+      font-size: 22px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .title-main span.logo-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 10px rgba(34, 197, 94, 0.8);
+    }
+
+    .title-sub {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .pill-live {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 12px;
+      border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+
+    .pill-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 6px rgba(34, 197, 94, 0.9);
+    }
+
+    .time-text {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Cards أعلى */
+    .metrics-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .metric-card {
+      background: linear-gradient(135deg, #020617, #020617);
+      border-radius: 14px;
+      padding: 12px 14px;
+      border: 1px solid var(--border-soft);
+    }
+
+    .metric-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .metric-value {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .metric-chip {
+      font-size: 11px;
+      color: var(--accent);
+      margin-top: 2px;
+    }
+
+    /* المحتوى الرئيسي */
+    .main-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+      gap: 14px;
+    }
+
+    @media (max-width: 900px) {
+      .main-layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .card {
+      background: radial-gradient(circle at top left, #0f172a, #020617 60%);
+      border-radius: 16px;
+      border: 1px solid var(--border-soft);
+      padding: 14px 14px 10px;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.7);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      gap: 10px;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .card-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .filter-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .filter-btn {
+      border-radius: 999px;
+      border: 1px solid var(--border-soft);
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 11px;
+      padding: 6px 10px;
+      cursor: pointer;
+    }
+
+    .filter-btn.active {
+      background: rgba(34, 197, 94, 0.12);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .filter-btn[data-risk="critical"].active {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: var(--critical);
+      color: var(--critical);
+    }
+
+    .filter-btn[data-risk="high"].active {
+      background: rgba(249, 115, 22, 0.15);
+      border-color: var(--high);
+      color: var(--high);
+    }
+
+    .filter-btn[data-risk="medium"].active {
+      background: rgba(234, 179, 8, 0.15);
+      border-color: var(--medium);
+      color: var(--medium);
+    }
+
+    .filter-btn[data-risk="low"].active {
+      background: rgba(59, 130, 246, 0.15);
+      border-color: var(--low);
+      color: var(--low);
+    }
+
+    .filter-btn[data-risk="normal"].active {
+      background: rgba(34, 197, 94, 0.15);
+      border-color: var(--normal);
+      color: var(--normal);
+    }
+
+    /* جدول التنبيهات */
+    .table-wrap {
+      border-radius: 12px;
+      border: 1px solid var(--border-soft);
+      overflow: hidden;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    thead {
+      background: #020617;
+    }
+
+    th,
+    td {
+      padding: 8px 10px;
+      text-align: right;
+      border-bottom: 1px solid #111827;
+    }
+
+    th {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    tbody tr {
+      transition: background 0.15s ease, transform 0.1s ease;
+    }
+
+    tbody tr:hover {
+      background: rgba(15, 23, 42, 0.9);
+      transform: translateY(-1px);
+    }
+
+    .risk-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 500;
+    }
+
+    .risk-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+    }
+
+    .risk-critical {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--critical);
+    }
+    .risk-critical .risk-dot {
+      background: var(--critical);
+    }
+
+    .risk-high {
+      background: rgba(249, 115, 22, 0.12);
+      color: var(--high);
+    }
+    .risk-high .risk-dot {
+      background: var(--high);
+    }
+
+    .risk-medium {
+      background: rgba(234, 179, 8, 0.12);
+      color: var(--medium);
+    }
+    .risk-medium .risk-dot {
+      background: var(--medium);
+    }
+
+    .risk-low {
+      background: rgba(59, 130, 246, 0.12);
+      color: var(--low);
+    }
+    .risk-low .risk-dot {
+      background: var(--low);
+    }
+
+    .risk-normal {
+      background: rgba(34, 197, 94, 0.12);
+      color: var(--normal);
+    }
+    .risk-normal .risk-dot {
+      background: var(--normal);
+    }
+
+    .cell-muted {
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .cell-strong {
+      font-weight: 500;
+    }
+
+    .badge-action {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 7px;
+      border-radius: 999px;
+      font-size: 10px;
+      background: rgba(148, 163, 184, 0.15);
+      color: #e5e7eb;
+    }
+
+    .badge-action.deny {
+      background: rgba(239, 68, 68, 0.18);
+      color: var(--critical);
+    }
+
+    .badge-action.allow {
+      background: rgba(34, 197, 94, 0.18);
+      color: var(--normal);
+    }
+
+    /* Map + جانب */
+    #attack-map {
+      width: 100%;
+      height: 280px;
+      border-radius: 12px;
+      border: 1px solid var(--border-soft);
+      margin-top: 8px;
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+
+    .side-bottom {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .side-card {
+      background: #020617;
+      border-radius: 12px;
+      border: 1px solid var(--border-soft);
+      padding: 10px 11px;
+      font-size: 11px;
+    }
+
+    .side-card-title {
+      font-size: 11px;
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+
+    .side-chip {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    .list-compact {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .list-compact li {
+      margin-bottom: 4px;
+      color: var(--text-muted);
+    }
+
+    .list-compact li span {
+      color: var(--text-main);
+    }
+
+    .error-banner {
+      margin-top: 6px;
+      font-size: 11px;
+      color: #fecaca;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 14px 8px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <!-- HEADER -->
+    <header>
+      <div class="title-block">
+        <div class="title-main">
+          <span class="logo-dot"></span>
+          Push Event – SOC Dashboard
+        </div>
+        <div class="title-sub">
+          Real-time monitoring of suspicious login attempts and push MFA decisions.
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="pill-live">
+          <span class="pill-dot"></span>
+          Live stream
+        </div>
+        <div class="time-text" id="last-refresh">
+          Last update: —
+        </div>
+      </div>
+    </header>
+
+    <!-- METRICS -->
+    <section class="metrics-row">
+      <div class="metric-card">
+        <div class="metric-label">Total Alerts</div>
+        <div class="metric-value" id="metric-total">0</div>
+        <div class="metric-chip">All risk levels</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Critical / High</div>
+        <div class="metric-value" id="metric-critical-high">0</div>
+        <div class="metric-chip">Requires SOC attention</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Medium</div>
+        <div class="metric-value" id="metric-medium">0</div>
+        <div class="metric-chip">Unusual but not blocked</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Low / Normal</div>
+        <div class="metric-value" id="metric-low-normal">0</div>
+        <div class="metric-chip">Baseline user activity</div>
+      </div>
+    </section>
+
+    <!-- MAIN LAYOUT -->
+    <section class="main-layout">
+      <!-- LEFT: TABLE -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Push Events Timeline</div>
+            <div class="card-sub">
+              Latest login attempts, decisions, and anomaly scores.
+            </div>
+          </div>
+          <div class="filter-row">
+            <button class="filter-btn active" data-risk="all">All</button>
+            <button class="filter-btn" data-risk="critical">Critical</button>
+            <button class="filter-btn" data-risk="high">High</button>
+            <button class="filter-btn" data-risk="medium">Medium</button>
+            <button class="filter-btn" data-risk="low">Low</button>
+            <button class="filter-btn" data-risk="normal">Normal</button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>User</th>
+                <th>IP</th>
+                <th>Location</th>
+                <th>Device</th>
+                <th>Action</th>
+                <th>Rule</th>
+                <th>ML</th>
+                <th>Final</th>
+              </tr>
+            </thead>
+            <tbody id="alerts-body">
+              <!-- rows will be injected here -->
+            </tbody>
+          </table>
+        </div>
+
+        <div class="empty-state" id="empty-state" style="display:none;">
+          No alerts received yet. Trigger a suspicious login from the Absher simulator to see events here.
+        </div>
+
+        <div class="error-banner" id="error-banner" style="display:none;">
+          Cannot connect to backend API at <span id="api-url-text"></span>.
+          Please check that FastAPI & Redis are running.
+        </div>
+      </div>
+
+      <!-- RIGHT: MAP & CARDS -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Geo Activity Map</div>
+            <div class="card-sub">
+              Visual distribution of recent push events by country.
+            </div>
+          </div>
+        </div>
+
+        <div id="attack-map"></div>
+
+        <div class="side-bottom">
+          <div class="side-card">
+            <div class="side-card-title">Risk distribution</div>
+            <ul class="list-compact" id="risk-distribution-list">
+              <!-- filled by JS -->
+            </ul>
+            <div class="side-chip">
+              Based on the latest alerts from /soc/alerts.
+            </div>
+          </div>
+          <div class="side-card">
+            <div class="side-card-title">Last critical event</div>
+            <ul class="list-compact" id="last-critical">
+              <!-- filled by JS -->
+            </ul>
+            <div class="side-chip">
+              Helps SOC decide escalation or blocking.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // ===============================
+    // CONFIG
+    // ===============================
+    const API_BASE = "http://127.0.0.1:5000";
+    document.getElementById("api-url-text").textContent = API_BASE + "/soc/alerts";
+
+    // نفس ترتيب الباك إند
+    const RISK_LEVELS = ["normal", "low", "medium", "high", "critical"];
+
+    // خريطة ثابتة للإحداثيات (بدون اتصال خارجي للخرائط العكسية)
+    const CITY_COORDS = {
+      "الرياض، السعودية": [24.7136, 46.6753],
+      "جدة، السعودية": [21.4858, 39.1925],
+      "الدمام، السعودية": [26.4207, 50.0888],
+      "المدينة المنورة، السعودية": [24.5247, 39.5692],
+      "براغ، التشيك": [50.0755, 14.4378],
+      "لندن، المملكة المتحدة": [51.5074, -0.1278],
+      "طوكيو، اليابان": [35.6762, 139.6503],
+      "برلين، ألمانيا": [52.52, 13.4050],
+      "باريس، فرنسا": [48.8566, 2.3522]
+    };
+
+    // إذا كان الباك يرجع فقط اسم دولة بالعربي، نقدر نضيف مفاتيح لها هنا تدريجياً
+
+    // ===============================
+    // MAP INIT
+    // ===============================
+    const map = L.map("attack-map", {
+      zoomControl: false
+    }).setView([24.7136, 46.6753], 3);
+
+    const baseLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 18
+    }).addTo(map);
+
+    let currentMarkers = [];
+
+    function clearMarkers() {
+      currentMarkers.forEach(m => map.removeLayer(m));
+      currentMarkers = [];
+    }
+
+    function addMarkerForLocation(locationString, riskLabel) {
+      if (!locationString) return;
+      const coords = CITY_COORDS[locationString.trim()];
+      if (!coords) return;
+
+      const color =
+        riskLabel === "critical" ? "#ef4444" :
+        riskLabel === "high" ? "#f97316" :
+        riskLabel === "medium" ? "#eab308" :
+        riskLabel === "low" ? "#3b82f6" :
+        "#22c55e";
+
+      const marker = L.circleMarker(coords, {
+        radius: 7,
+        color,
+        fillColor: color,
+        fillOpacity: 0.9
+      }).addTo(map);
+
+      currentMarkers.push(marker);
+    }
+
+    // ===============================
+    // STATE
+    // ===============================
+    let alertsData = [];
+    let activeFilter = "all";
+
+    // ===============================
+    // UTILITIES
+    // ===============================
+    function formatTime(ts) {
+      if (!ts) return "-";
+      let seconds = parseFloat(ts);
+      if (isNaN(seconds)) return "-";
+      const d = new Date(seconds * 1000);
+      if (isNaN(d.getTime())) return "-";
+      return d.toLocaleString("ar-SA", {
+        hour12: false
+      });
+    }
+
+    function computeFinalRisk(rule_risk, ml_risk) {
+      const idxRule = RISK_LEVELS.indexOf((rule_risk || "").toLowerCase());
+      const idxMl = RISK_LEVELS.indexOf((ml_risk || "").toLowerCase());
+      const r = idxRule === -1 ? 0 : idxRule;
+      const m = idxMl === -1 ? 0 : idxMl;
+      const finalIdx = Math.max(r, m);
+      return RISK_LEVELS[Math.min(finalIdx, RISK_LEVELS.length - 1)];
+    }
+
+    function riskClass(label) {
+      switch (label) {
+        case "critical": return "risk-critical";
+        case "high": return "risk-high";
+        case "medium": return "risk-medium";
+        case "low": return "risk-low";
+        case "normal": return "risk-normal";
+        default: return "risk-low";
+      }
+    }
+
+    // ===============================
+    // RENDERING
+    // ===============================
+    function renderMetrics() {
+      const total = alertsData.length;
+      let criticalHigh = 0;
+      let medium = 0;
+      let lowNormal = 0;
+
+      alertsData.forEach(a => {
+        const finalRisk = computeFinalRisk(a.rule_risk, a.ml_risk);
+        if (finalRisk === "critical" || finalRisk === "high") criticalHigh++;
+        else if (finalRisk === "medium") medium++;
+        else lowNormal++;
+      });
+
+      document.getElementById("metric-total").textContent = total;
+      document.getElementById("metric-critical-high").textContent = criticalHigh;
+      document.getElementById("metric-medium").textContent = medium;
+      document.getElementById("metric-low-normal").textContent = lowNormal;
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById("alerts-body");
+      tbody.innerHTML = "";
+
+      const emptyState = document.getElementById("empty-state");
+      if (!alertsData.length) {
+        emptyState.style.display = "block";
+        return;
+      } else {
+        emptyState.style.display = "none";
+      }
+
+      const sorted = [...alertsData].sort((a, b) => {
+        const ta = parseFloat(a.time || "0");
+        const tb = parseFloat(b.time || "0");
+        return tb - ta;
+      });
+
+      const filtered = sorted.filter(a => {
+        if (activeFilter === "all") return true;
+        const finalRisk = computeFinalRisk(a.rule_risk, a.ml_risk);
+        return finalRisk === activeFilter;
+      });
+
+      filtered.forEach(a => {
+        const tr = document.createElement("tr");
+
+        const finalRisk = computeFinalRisk(a.rule_risk, a.ml_risk);
+        const riskCls = riskClass(finalRisk);
+
+        function addCell(text, extraClass) {
+          const td = document.createElement("td");
+          if (extraClass) td.classList.add(extraClass);
+          td.textContent = text || "-";
+          tr.appendChild(td);
+        }
+
+        addCell(formatTime(a.time), "cell-muted");                 // Time
+        addCell(a.user || "", "cell-strong");                      // User
+        addCell(a.ip || "", "cell-muted");                         // IP
+        addCell(a.country || "", "cell-muted");                    // Location
+        addCell(a.device || "", "cell-muted");                     // Device
+
+        // Action badge
+        const tdAction = document.createElement("td");
+        const actionSpan = document.createElement("span");
+        actionSpan.classList.add("badge-action");
+        const action = (a.action || "").toLowerCase();
+        if (action === "deny" || action === "denied") {
+          actionSpan.classList.add("deny");
+          actionSpan.textContent = "Denied";
+        } else if (action === "allow" || action === "approved") {
+          actionSpan.classList.add("allow");
+          actionSpan.textContent = "Allowed";
+        } else {
+          actionSpan.textContent = a.action || "Suspicious";
+        }
+        tdAction.appendChild(actionSpan);
+        tr.appendChild(tdAction);
+
+        // Rule risk
+        const tdRule = document.createElement("td");
+        const pillRule = document.createElement("span");
+        const ruleLabel = (a.rule_risk || "low").toLowerCase();
+        pillRule.className = "risk-pill " + riskClass(ruleLabel);
+        const dotRule = document.createElement("span");
+        dotRule.classList.add("risk-dot");
+        const txtRule = document.createElement("span");
+        txtRule.textContent = ruleLabel;
+        pillRule.appendChild(dotRule);
+        pillRule.appendChild(txtRule);
+        tdRule.appendChild(pillRule);
+        tr.appendChild(tdRule);
+
+        // ML risk
+        const tdMl = document.createElement("td");
+        const pillMl = document.createElement("span");
+        const mlLabel = (a.ml_risk || "low").toLowerCase();
+        pillMl.className = "risk-pill " + riskClass(mlLabel);
+        const dotMl = document.createElement("span");
+        dotMl.classList.add("risk-dot");
+        const txtMl = document.createElement("span");
+        txtMl.textContent = mlLabel;
+        pillMl.appendChild(dotMl);
+        pillMl.appendChild(txtMl);
+        tdMl.appendChild(pillMl);
+        tr.appendChild(tdMl);
+
+        // Final risk
+        const tdFinal = document.createElement("td");
+        const pillFinal = document.createElement("span");
+        pillFinal.className = "risk-pill " + riskCls;
+        const dotFinal = document.createElement("span");
+        dotFinal.classList.add("risk-dot");
+        const txtFinal = document.createElement("span");
+        txtFinal.textContent = finalRisk;
+        pillFinal.appendChild(dotFinal);
+        pillFinal.appendChild(txtFinal);
+        tdFinal.appendChild(pillFinal);
+        tr.appendChild(tdFinal);
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderRiskDistribution() {
+      const list = document.getElementById("risk-distribution-list");
+      list.innerHTML = "";
+
+      if (!alertsData.length) {
+        const li = document.createElement("li");
+        li.textContent = "No data yet.";
+        list.appendChild(li);
+        return;
+      }
+
+      const counts = {
+        normal: 0,
+        low: 0,
+        medium: 0,
+        high: 0,
+        critical: 0
+      };
+
+      alertsData.forEach(a => {
+        const finalRisk = computeFinalRisk(a.rule_risk, a.ml_risk);
+        if (counts[finalRisk] !== undefined) {
+          counts[finalRisk]++;
+        }
+      });
+
+      RISK_LEVELS.slice().reverse().forEach(level => {
+        const total = alertsData.length;
+        const count = counts[level];
+        if (!count) return;
+        const percent = ((count / total) * 100).toFixed(1);
+
+        const li = document.createElement("li");
+        li.textContent = `${level}: `;
+        const span = document.createElement("span");
+        span.textContent = `${count} (${percent}%)`;
+        li.appendChild(span);
+        list.appendChild(li);
+      });
+    }
+
+    function renderLastCritical() {
+      const container = document.getElementById("last-critical");
+      container.innerHTML = "";
+
+      const criticals = alertsData.filter(a => {
+        const finalRisk = computeFinalRisk(a.rule_risk, a.ml_risk);
+        return finalRisk === "critical";
+      }).sort((a, b) => parseFloat(b.time || "0") - parseFloat(a.time || "0"));
+
+      if (!criticals.length) {
+        const li = document.createElement("li");
+        li.textContent = "No critical alerts yet.";
+        container.appendChild(li);
+        return;
+      }
+
+      const last = criticals[0];
+
+      const li1 = document.createElement("li");
+      li1.textContent = `User: `;
+      const s1 = document.createElement("span");
+      s1.textContent = last.user || "-";
+      li1.appendChild(s1);
+
+      const li2 = document.createElement("li");
+      li2.textContent = `IP: `;
+      const s2 = document.createElement("span");
+      s2.textContent = last.ip || "-";
+      li2.appendChild(s2);
+
+      const li3 = document.createElement("li");
+      li3.textContent = `Location: `;
+      const s3 = document.createElement("span");
+      s3.textContent = last.country || "-";
+      li3.appendChild(s3);
+
+      const li4 = document.createElement("li");
+      li4.textContent = `Time: `;
+      const s4 = document.createElement("span");
+      s4.textContent = formatTime(last.time);
+      li4.appendChild(s4);
+
+      container.appendChild(li1);
+      container.appendChild(li2);
+      container.appendChild(li3);
+      container.appendChild(li4);
+    }
+
+    function renderMap() {
+      clearMarkers();
+
+      const filtered = alertsData.filter(a => {
+        if (activeFilter === "all") return true;
+        const finalRisk = computeFinalRisk(a.rule_risk, a.ml_risk);
+        return finalRisk === activeFilter;
+      });
+
+      if (!filtered.length) {
+        // لا تغيّر الزووم لو مافيه بيانات
+        return;
+      }
+
+      const bounds = [];
+
+      filtered.forEach(a => {
+        const finalRisk = computeFinalRisk(a.rule_risk, a.ml_risk);
+        if (!a.country) return;
+        const coords = CITY_COORDS[a.country.trim()];
+        if (!coords) return;
+        addMarkerForLocation(a.country, finalRisk);
+        bounds.push(coords);
+      });
+
+      if (bounds.length) {
+        const latLngBounds = L.latLngBounds(bounds);
+        map.fitBounds(latLngBounds, { padding: [20, 20] });
+      }
+    }
+
+    function renderAll() {
+      renderMetrics();
+      renderTable();
+      renderRiskDistribution();
+      renderLastCritical();
+      renderMap();
+
+      const nowTxt = new Date().toLocaleTimeString("ar-SA", { hour12: false });
+      document.getElementById("last-refresh").textContent = "Last update: " + nowTxt;
+    }
+
+    // ===============================
+    // FETCH DATA
+    // ===============================
+    const errorBanner = document.getElementById("error-banner");
+
+    async function fetchAlerts() {
+      try {
+        const res = await fetch(API_BASE + "/soc/alerts");
+        if (!res.ok) {
+          throw new Error("HTTP " + res.status);
+        }
+        const data = await res.json();
+        if (!Array.isArray(data)) {
+          throw new Error("Invalid JSON");
+        }
+        alertsData = data;
+        errorBanner.style.display = "none";
+        renderAll();
+      } catch (err) {
+        console.error("Error fetching alerts:", err);
+        errorBanner.style.display = "block";
+      }
+    }
+
+    // أول تحميل
+    fetchAlerts();
+    // تحديث دوري كل 5 ثوان
+    setInterval(fetchAlerts, 5000);
+
+    // ===============================
+    // FILTER BUTTONS
+    // ===============================
+    const filterButtons = document.querySelectorAll(".filter-btn");
+    filterButtons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        filterButtons.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        activeFilter = btn.getAttribute("data-risk") || "all";
+        renderTable();
+        renderRiskDistribution();
+        renderLastCritical();
+        renderMap();
+      });
+    });
+  </script>
+</body>
+</html>
